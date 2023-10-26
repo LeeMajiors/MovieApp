@@ -1,11 +1,19 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
- import movies from '../movies.json'assert { type: 'json' }
+// import movies from '../movies.json'assert { type: 'json' }
 
 
 const router = express.Router();
 
-// let movies = []
+let movies = [
+    // {
+    //     "title":" ",
+    //     "year": " ",
+    //     "genre": " ",
+    //     "director": " ",
+    //     "id": " ",
+    // }
+]
 
 
 
@@ -20,7 +28,7 @@ router.post('/',(req,res)=>{
 
     movies.push({ ...movie, id: uuidv4() })
 
-    res.send(`Movie with the name ${movie.Title} added to the database!`)
+    res.send(`Movie with the name ${movie.title} added to the database!`)
 
 
 });
