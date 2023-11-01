@@ -8,7 +8,7 @@ const PORT = 5000;
 app.use(bodyParser.json());
 app.use('/movies', movieRoutes)
 
-app.get('/', (req, res) => res.send('hello from the movie home page.'));
+// app.get('/', (req, res) => res.send('hello from the movie home page.'));
 
 app.listen(PORT, ()=> console.log(`Server Running on port: http://localhost:${PORT}`));
 
