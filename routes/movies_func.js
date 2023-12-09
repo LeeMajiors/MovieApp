@@ -1,88 +1,106 @@
 import express from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import bodyParser from 'body-parser';
+import { MongoClient } from 'mongodb';
+
 // import movies from '../movies.json'assert { type: 'json' }
 
+const app = express();
 
-const router = express.Router();
-
-let movies = [
-    // {
-    //     "title":" ",
-    //     "year": " ",
-    //     "genre": " ",
-    //     "director": " ",
-    //     "id": " ",
-    // }
-]
+app.use(bodyParser.urlencoded({ extended: true}))
 
 
-
-router.get('/', (req, res) => {
-    console.log(movies);
-    res.send(movies);
-});
-
-
-router.post('/',(req,res)=>{
-    const movie = req.body;
-
-    movies.push({ ...movie, id: uuidv4() })
-    res.send(movies);
-    // res.send(`Movie with the name ${movie.title} added to the database!`)
-
-});
-
-router.get('/:id',(req, res) =>{
-    const { id } = req.params;
-
-    const foundMovie = movies.find((movie) => movie.id === id);
+MongoClient.connect(
+    'mongodb+srv://Leem:(password-removed)@cluster0.3hembv8.mongodb.net/?retryWrites=true&w=majority', 
+    { useUnifiedTopology: true },
     
-    if (foundMovie !== id) {
-        res.send(foundMovie); 
-    } else {
-        res.status(404)
-        res.send('404 not found');        
-    }
-});
-
-
-router.delete('/:id',(req,res) => {
-    const { id } = req.params;
-
-    movies = movies.filter((movie)=> movie.id != id);
-    // res.send(`Movie with the id ${id} is now deleted from the data base`)
-    res.send(movies.id);
-
-});
+    )
+    .then((client => {
+        const db = client.db('movies_db');
+        const movieCollection = db.collection('joints')
 
 
 
-router.put('/:id', (req, res) => {
-    const { id } = req.params;
-    const updatedMovie = req.body;
-
-    movies = movies.map((movie) => {
-        if (movie.id === id) {
-            return { ...movie, ...updatedMovie };
-        } else {
-            return movie;
-        }
+        router.post('/',(req,res)=>{
+            const movie = req.body;
+            movieCollection
+            .insertOne(movie)
+            .then(() => {
+                res.redirect('/')
+            })
+            .catch((error) => {
+                console.error(error)
+                res.status(500).send('Internal Server Error');
+                res.send(`Movie with the name ${movie.title} added to the database!`);
+        });
     });
 
-    // res.send(`Updated movie with ID ${id}`);
-    res.send(movies);
+        router.get('/', (req, res) => {
+        movieCollection
+            .find()
+            .toArray()
+            .then((movies) =>{
+                res.json(movies);
+            })
+            .catch(error => {
+                console.error(error)
+                res.status(500).send('Internal Server Error');
+                res.send(`Movie with the name ${movie.title} added to the database!`)
+        });
+    });
 
-});
+        router.get('/:id',(req, res) =>{
+            const { id } = req.params;
+            movieCollection
+            .findOne({_id: id})
+            .then((movie)=> {
+                if (movie) {
+                    res.json(movie);
+                } else{
+                    res.status(404).send('Movie not found')
+                }
+            })
+            .catch((error)=>{
+                console.error(error);
+                res.status(500).send('internal Server Error')
+            });
 
-router.use('*',(req,res)=>{
-    res.type('text/plain')
-    res.status(404)
-    res.send('404 not found')
-})
 
+    });
 
+        router.delete('/:id', (req, res) => {
+            const { id } = req.params;
+            movieCollection
+              .deleteOne({ _id: id })
+              .then(() => {
+                res.send(`Movie with the id ${id} is now deleted from the database`);
+              })
+              .catch((error) => {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+        });
+    });
 
+        router.put('/:id', (req, res) => {
+            const { id } = req.params;
+            const updatedMovie = req.body;
+          
+            movieCollection
+              .updateOne({ _id: id }, { $set: updatedMovie })
+              .then(() => {
+                res.send(`Updated movie with ID ${id}`);
+              })
+              .catch((error) => {
+                console.error(error);
+                res.status(500).send('Internal Server Error');
+              });
+    });
+          
 
-
-
-export default router;
+        router.use('*',(req,res)=>{
+            res.type('text/plain');
+            res.status(404);
+            res.send('404 not found');
+         });
+        }))
+        const router = express.Router();
+        export default router;
