@@ -29,7 +29,7 @@ app.post("/movie", async (req, res) => {
     return res.status(201).json(addMovie);
 });
 
-app.post("/movie/user/signup", async (req, res) => {
+app.post("/movie/user/register", async (req, res) => {
     if (!req.body.username || !req.body.password_hash) {
         res.json({ success: false, error: "Enter users name and or password" });
         return;
