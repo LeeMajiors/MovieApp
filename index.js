@@ -109,23 +109,25 @@ app.delete('/movie/:id', Autho ,async (req, res) => {
 
 
 function Autho(req, res, next){
-    const user = User.findOne({ username: req.body.username, password:req.body.password,});
-
+    const user = User.findOne({ username: req.body.username });
     if (!user) {
         res.json({ success: false, error: "User does not exist" });
         return;
     }
 
-    const passwordMatch = User.findOne({api_key: user.api_key});
-
-
-     if (!passwordMatch) {
+    const apiKeyMatch = User.findOne({api_key: user.api_key});
+     if (!apiKeyMatch) {
         res.json({ success: false, error: "Incorrect password" });
         return;
     }
 
+    const passwordMatch = User.findOne({password: user.password});
+     if (!passwordMatch) {
+        res.json({ success: false, error: "Incorrect password" });
+        return;
+    }
+    
     const id = User.findOne({userId: user.userId});
-
     if (!id) {
         res.json({ success: false, error: "Incorrect User name or password" });
         return;
