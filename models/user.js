@@ -10,14 +10,17 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    password_hash:{
+    password:{
         type: String,
         required: true
     },
     api_key:{
         type: String,
         unique: true
-        
+    },
+    userId:{
+        type: String,
+        unique: true,
     },
     createdAt:{
         type: Date,
