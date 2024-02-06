@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const User = require('./models/user');
 const { MovieData } = require('./models/movies.js');
 const {v4 : uuidv4} = require('uuid')
-
+const { generateApiKey } = require('generate-api-key')
 const userId = uuidv4();
 const server_port = process.env.PORT || 5000;
 const app = express();
@@ -42,11 +42,14 @@ app.post("/movie/user/register", async (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
       
-    const newUser = new User({ username: req.body.username, password: hashedPassword, userId: userId} );
+    const newUser = new User({ username: req.body.username, password: hashedPassword, api_key: generateApiKey() } );
 
     try {
         const savedUser = await newUser.save();
-        res.json({ success: true, user: savedUser });
+        res.json({ success: true,  username: savedUser.username, 
+                                   userId: savedUser.password,
+                                   apiKey: savedUser.api_key 
+                                });
     } catch (error) {
         res.json({ success: false, error: error.message });
     }
@@ -59,28 +62,28 @@ app.post("/movie/user/login", Autho ,async (req, res) => {
         return;
     }
 
-    // const user = await User.findOne({ username: req.body.username});
+    const user = await User.findOne({ username: req.body.username});
 
-    // if (!user) {
-    //     res.json({ success: false, error: "User does not exist" });
-    //     return;
-    // }
+    if (!user) {
+        res.json({ success: false, error: "User does not exist" });
+        return;
+    }
 
-    // const passwordMatch = bcrypt.compareSync(req.body.password, user.password, user.userId);
+    const passwordMatch = bcrypt.compareSync(req.body.password, user.password, user.userId);
 
-    // if (!passwordMatch) {
-    //     res.json({ success: false, error: "Incorrect password" });
-    //     return;
-    // }
+    if (!passwordMatch) {
+        res.json({ success: false, error: "Incorrect password" });
+        return;
+    }
 
-    // const id = await User.findOne({userId: user.userId});
+    const id = await User.findOne({userId: user.userId});
 
-    // if (!id) {
-    //     res.json({ success: false, error: "Incorrect User name or password" });
-    //     return;
-    // }
+    if (!id) {
+        res.json({ success: false, error: "Incorrect User name or password" });
+        return;
+    }
 
-    res.json({ success: true, user });
+    res.json({ success: true});
 });
 
 app.put("/movie/:id", Autho ,async (req, res) => {
@@ -109,29 +112,32 @@ app.delete('/movie/:id', Autho ,async (req, res) => {
 
 
 function Autho(req, res, next){
-    const user = User.findOne({ username: req.body.username });
-    if (!user) {
-        res.json({ success: false, error: "User does not exist" });
+    // const user = User.findOne({ username: req.body.username });
+    // if (!user) {
+    //     res.json({ success: false, error: "User does not exist" });
+    //     return;
+    // }
+
+    const apiKeyMatch = User.findOne({api_key: req.body.api_key});
+     if (apiKeyMatch) {
+        res.json({ success: true, message: "you're in" });
+        return;
+    }else{
+        res.json({ success: false, message: "User does not exist" });
         return;
     }
 
-    const apiKeyMatch = User.findOne({api_key: user.api_key});
-     if (!apiKeyMatch) {
-        res.json({ success: false, error: "Incorrect password" });
-        return;
-    }
-
-    const passwordMatch = User.findOne({password: user.password});
-     if (!passwordMatch) {
-        res.json({ success: false, error: "Incorrect password" });
-        return;
-    }
+    // const passwordMatch = User.findOne({password: user.password});
+    //  if (!passwordMatch) {
+    //     res.json({ success: false, error: "Incorrect password" });
+    //     return;
+    // }
     
-    const id = User.findOne({userId: user.userId});
-    if (!id) {
-        res.json({ success: false, error: "Incorrect User name or password" });
-        return;
-    }
+    // const id = User.findOne({userId: user.userId});
+    // if (!id) {
+    //     res.json({ success: false, error: "Incorrect User name or password" });
+    //     return;
+    // }
 
     next ()
     
