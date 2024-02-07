@@ -9,11 +9,10 @@ const { generateApiKey } = require('generate-api-key')
 const userId = uuidv4();
 const server_port = process.env.PORT || 5000;
 const app = express();
+//let newApiKey = generateApiKey();
 
 app.use(bodyParser.json());
 app.use(express.json());
-
-
 
 
 
@@ -35,6 +34,8 @@ app.post("/movie", async (req, res) => {
 });
 
 app.post("/movie/user/register", async (req, res) => {
+    const newApiKey = (generateApiKey());
+
     if (!req.body.username || !req.body.password) {
         res.json({ success: false, error: "Enter users name and or password" });
         return;
@@ -42,13 +43,17 @@ app.post("/movie/user/register", async (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
       
-    const newUser = new User({ username: req.body.username, password: hashedPassword, api_key: generateApiKey() } );
+    const newUser = new User({ username: req.body.username,
+                               user_id: req.body.userId,  
+                               password: hashedPassword, 
+                               api_key: newApiKey });
 
     try {
         const savedUser = await newUser.save();
-        res.json({ success: true,  username: savedUser.username, 
-                                   userId: savedUser.password,
-                                   apiKey: savedUser.api_key 
+        res.json({ success: true,  
+                   username: savedUser.username,
+                   user_id: savedUser._id,   
+                   apiKey: savedUser.api_key 
                                 });
     } catch (error) {
         res.json({ success: false, error: error.message });
@@ -58,7 +63,7 @@ app.post("/movie/user/register", async (req, res) => {
 app.post("/movie/user/login", Autho ,async (req, res) => {
 
     if (!req.body.username || !req.body.password) {
-        res.json({ success: false, error: "Enter users name and or password" });
+        res.json({ note: api_key, success: false, error: "Enter users name and or password" });
         return;
     }
 
@@ -119,13 +124,14 @@ function Autho(req, res, next){
     // }
 
     const apiKeyMatch = User.findOne({api_key: req.body.api_key});
-     if (apiKeyMatch) {
-        res.json({ success: true, message: "you're in" });
-        return;
-    }else{
-        res.json({ success: false, message: "User does not exist" });
+     if (!apiKeyMatch) {
+        res.json({ success: true, message: "User does not exist" });
         return;
     }
+    // else{
+    //     res.json({ success: false, message: "User does not exist" });
+    //     return;
+    // }
 
     // const passwordMatch = User.findOne({password: user.password});
     //  if (!passwordMatch) {
