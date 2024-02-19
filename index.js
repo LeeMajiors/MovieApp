@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
+require('./models/database')
 const User = require('./models/user');
 const { MovieData } = require('./models/movies.js');
 const {v4 : uuidv4} = require('uuid')
@@ -9,7 +10,7 @@ const { generateApiKey } = require('generate-api-key')
 const userId = uuidv4();
 const server_port = process.env.PORT || 5000;
 const app = express();
-//let newApiKey = generateApiKey();
+
 
 app.use(bodyParser.json());
 app.use(express.json());
@@ -27,7 +28,7 @@ app.get('/movie/:id', Autho ,async (req, res) => {
     return res.status(200).json(movie);
 });
 
-app.post("/movie", async (req, res) => {
+app.post("/movie", Autho ,async (req, res) => {
     const newMovie = new MovieData({ ...req.body });
     const addMovie = await newMovie.save();
     return res.status(201).json(addMovie);
@@ -116,34 +117,15 @@ app.delete('/movie/:id', Autho ,async (req, res) => {
 });
 
 
-function Autho(req, res, next){
-    // const user = User.findOne({ username: req.body.username });
-    // if (!user) {
-    //     res.json({ success: false, error: "User does not exist" });
-    //     return;
-    // }
-
-    const apiKeyMatch = User.findOne({api_key: req.body.api_key});
+async function  Autho(req, res, next){
+  
+    const apiKeyMatch = await User.findOne({api_key: req.headers.authorization});
+    console.log(apiKeyMatch)
      if (!apiKeyMatch) {
-        res.json({ success: true, message: "User does not exist" });
-        return;
+        return res.status(401).json({ success: false, message: "User does not exist" });
+        
     }
-    // else{
-    //     res.json({ success: false, message: "User does not exist" });
-    //     return;
-    // }
-
-    // const passwordMatch = User.findOne({password: user.password});
-    //  if (!passwordMatch) {
-    //     res.json({ success: false, error: "Incorrect password" });
-    //     return;
-    // }
-    
-    // const id = User.findOne({userId: user.userId});
-    // if (!id) {
-    //     res.json({ success: false, error: "Incorrect User name or password" });
-    //     return;
-    // }
+   
 
     next ()
     
